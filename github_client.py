@@ -5,7 +5,7 @@ import csv
 
 from github import Github
 
-dtformat = '%a, %d %b %Y %H:%M:%S %Z'
+dtformat = '%Y-%m-%dT%H:%M:%SZ'
 
 def main(user, psw, outFile):
     g = Github(user, psw)
@@ -22,10 +22,15 @@ def main(user, psw, outFile):
         print("....{0}".format(repo.name))
         commits = [ c for c in repo.get_commits(author=user) ]
         for commit in commits:
+            raw = commit.raw_data
+            committer = raw['commit']['committer']
+            stats = raw['stats']
             dt = datetime.datetime.strptime(
-                commit.last_modified, dtformat)
+                committer['date'], dtformat)
             row = ( dt.year, dt.month, dt.day,
-                repo.url, commit.url, commit.stats.total )
+                repo.name, repo.url, commit.url,
+                stats['additions'], stats['deletions'],
+                stats['total'] )
             rows.append(row)
 
     with open(outFile, 'w') as f:
