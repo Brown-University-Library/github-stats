@@ -30,26 +30,29 @@ def main(inFile):
     year_month = collections.defaultdict(list)
     mos = 0.0
     for row in recent:
-        year_month[(row[0], row[1])].append(row)
+        year_month[(int(row[0]), int(row[1]) )].append(row)
 
     year_totals = collections.Counter()
     month_table = prettytable.PrettyTable()
     month_table.field_names = [ 'Date', 'Total Projects',
         'Total Commits', 'Median Commit Edits', 'Total Edits' ]
 
+    month_data = []
     for yrmn in year_month:
-        date_str = '{0}-{1}'.format(yrmn[0],yrmn[1])
+        dt = datetime.datetime(year=yrmn[0], month=yrmn[1], day=1)
+        date_str = datetime.datetime.strftime(dt, '%Y-%b')
         repos, commits, edits_t, edits_m = row_stats(year_month[yrmn])
-        month_table.add_row(
-            (date_str, repos, commits, edits_m, edits_t) )
+        month_data.append( ( dt,
+            (date_str, repos, commits, edits_m, edits_t) ) )
         year_totals['repos'] += repos
         year_totals['commits'] += commits
         year_totals['edits'] += edits_t
         mos += 1
 
+    for md in sorted(month_data):
+        month_table.add_row(md[1])
     month_table.align = 'r'
     month_table.align['Date'] = 'l'
-    month_table.sortby = 'Date'
     print(month_table)
 
     year_avgs = prettytable.PrettyTable()
