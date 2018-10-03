@@ -3,6 +3,7 @@ import csv
 import datetime
 import prettytable
 import collections
+import statistics
 
 def days_since(dayDiff, year, month, day):
     diff = datetime.timedelta(days=dayDiff) 
@@ -14,8 +15,9 @@ def days_since(dayDiff, year, month, day):
 def row_stats(rows):
     repo_count = len({ row[4] for row in rows })
     total_commits = len(rows)
-    line_total = sum([ int(row[-1]) for row in rows ])
-    return (repo_count, total_commits, line_total)
+    edits_total = sum([ int(row[-1]) for row in rows ])
+    edits_median = statistics.median([ int(row[-1]) for row in rows ])
+    return (repo_count, total_commits, edits_total, edits_median)
 
 def main(inFile):
     with open(inFile, 'r') as f:
@@ -33,15 +35,16 @@ def main(inFile):
     year_totals = collections.Counter()
     month_table = prettytable.PrettyTable()
     month_table.field_names = [ 'Date', 'Total Projects',
-        'Total Commits', 'Total Edits' ]
+        'Total Commits', 'Median Commit Edits', 'Total Edits' ]
 
     for yrmn in year_month:
         date_str = '{0}-{1}'.format(yrmn[0],yrmn[1])
-        repos, commits, edits = row_stats(year_month[yrmn])
-        month_table.add_row( (date_str, repos, commits, edits) )
+        repos, commits, edits_t, edits_m = row_stats(year_month[yrmn])
+        month_table.add_row(
+            (date_str, repos, commits, edits_m, edits_t) )
         year_totals['repos'] += repos
         year_totals['commits'] += commits
-        year_totals['edits'] += edits
+        year_totals['edits'] += edits_t
         mos += 1
 
     month_table.align = 'r'
